@@ -741,6 +741,7 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
                     int regState = ServiceState.RIL_REG_STATE_UNKNOWN;
                     int reasonRegStateDenied = -1;
                     int psc = -1;
+                    int cssIndicator = 0;
                     if (states.length > 0) {
                         try {
                             regState = Integer.parseInt(states[0]);
@@ -757,6 +758,9 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
                                     type = Integer.parseInt(states[3]);
                                 }
                             }
+                            if (states.length >= 8 && (states[7] != null)) {
+                                cssIndicator = Integer.parseInt(states[7]);
+                            }
                             if (states.length > 14) {
                                 if (states[14] != null && states[14].length() > 0) {
                                     psc = Integer.parseInt(states[14], 16);
@@ -770,6 +774,7 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
                     mGsmRoaming = regCodeIsRoaming(regState);
                     mNewSS.setState(regCodeToServiceState(regState));
                     mNewSS.setRilVoiceRadioTechnology(type);
+                    mNewSS.setCssIndicator(cssIndicator);
 
                     if ((regState == ServiceState.RIL_REG_STATE_DENIED
                             || regState == ServiceState.RIL_REG_STATE_DENIED_EMERGENCY_CALL_ENABLED)
@@ -1114,6 +1119,8 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
         boolean hasDataRoamingOff = mSS.getDataRoaming() && !mNewSS.getDataRoaming();
 
         boolean hasLocationChanged = !mNewCellLoc.equals(mCellLoc);
+
+        boolean hasCssIndicatorChanged = (mSS.getCssIndicator() != mNewSS.getCssIndicator());
         TelephonyManager tm =
                 (TelephonyManager) mPhone.getContext().getSystemService(Context.TELEPHONY_SERVICE);
 
@@ -1364,6 +1371,10 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
 
         if (hasLocationChanged) {
             mPhone.notifyLocationChanged();
+        }
+
+        if (hasCssIndicatorChanged) {
+            mPhone.notifyDataConnection(Phone.REASON_CSS_INDICATOR_CHANGED);
         }
 
         if (! isGprsConsistent(mSS.getDataRegState(), mSS.getVoiceRegState())) {
@@ -1674,11 +1685,16 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
 
     /**
      * @return true if phone is camping on a technology (eg UMTS)
-     * that could support voice and data simultaneously.
+     * that could support voice and data simultaneously or
+     * concurrent services support indicator is set to '1'.
      */
     @Override
     public boolean isConcurrentVoiceAndDataAllowed() {
-        return (mSS.getRilVoiceRadioTechnology() >= ServiceState.RIL_RADIO_TECHNOLOGY_UMTS);
+        if (mSS.getRilDataRadioTechnology() >= ServiceState.RIL_RADIO_TECHNOLOGY_UMTS) {
+            return true;
+        } else {
+            return mSS.getCssIndicator() == 1;
+        }
     }
 
     /**
