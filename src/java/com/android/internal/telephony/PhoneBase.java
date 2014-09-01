@@ -2730,4 +2730,9 @@ public abstract class PhoneBase extends Handler implements Phone {
     public void requestChangeCbPsw(String facility, String oldPwd, String newPwd, Message result) {
         logUnexpectedCdmaMethodCall("requestChangeCbPsw");
     }
+
+    @Override
+    public void setLocalCallHold(boolean lchStatus) {
+        mCi.setLocalCallHold(lchStatus);
+    }
 }
