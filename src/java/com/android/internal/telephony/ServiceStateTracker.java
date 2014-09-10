@@ -1147,4 +1147,21 @@ public abstract class ServiceStateTracker extends Handler {
     public final boolean isDeviceShuttingDown() {
         return mDeviceShuttingDown;
     }
+
+    /**
+     * Consider dataRegState if voiceRegState is OOS to determine SPN to be
+     * displayed
+     */
+    protected int getCombinedRegState() {
+        int regState = mSS.getVoiceRegState();
+        int dataRegState = mSS.getDataRegState();
+
+        if ((regState == ServiceState.STATE_OUT_OF_SERVICE)
+                && (dataRegState == ServiceState.STATE_IN_SERVICE)) {
+            log("getCombinedRegState: return STATE_IN_SERVICE as Data is in service");
+            regState = dataRegState;
+        }
+
+        return regState;
+    }
 }
