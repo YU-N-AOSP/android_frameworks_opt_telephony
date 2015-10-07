@@ -452,12 +452,24 @@ public class DctController extends Handler {
         }
     }
 
-    private void onReleaseAllRequests(int phoneId) {
+    private boolean isWithOutSpecifier(RequestInfo requestInfo) {
+        String specifier = requestInfo.request.networkCapabilities
+            .getNetworkSpecifier();
+        if (specifier == null || specifier.equals("")) {
+            logd("isWithOutSpecifier = true, requestInfo = " + requestInfo);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    protected void onReleaseAllRequests(int phoneId) {
         logd("onReleaseAllRequests phoneId=" + phoneId);
         Iterator<Integer> iterator = mRequestInfos.keySet().iterator();
         while (iterator.hasNext()) {
             RequestInfo requestInfo = mRequestInfos.get(iterator.next());
-            if (requestInfo.executedPhoneId == phoneId) {
+            if (requestInfo.executedPhoneId == phoneId
+                || isWithOutSpecifier(requestInfo)) {
                 onReleaseRequest(requestInfo);
             }
         }
@@ -472,6 +484,17 @@ public class DctController extends Handler {
         }
     }
 
+    private void deactivateDdsRequests() {
+            Iterator<Integer> iterator = mRequestInfos.keySet().iterator();
+            while (iterator.hasNext()) {
+                RequestInfo requestInfo = mRequestInfos.get(iterator.next());
+                String specifier = requestInfo.request.networkCapabilities.getNetworkSpecifier();
+                if (specifier == null || specifier.equals("")) {
+                    onReleaseRequest(requestInfo);
+                }
+            }
+    }
+
     private void onSettingsChanged() {
         //Sub Selection
         long dataSubId = mSubController.getDefaultDataSubId();
@@ -484,23 +507,8 @@ public class DctController extends Handler {
             }
         }
 
-        int[] subIds = SubscriptionManager.getSubId(activePhoneId);
-        if (subIds ==  null || subIds.length == 0) {
-            loge("onSettingsChange, subIds null or length 0 for activePhoneId " + activePhoneId);
-            return;
-        }
-        logd("onSettingsChange, data sub: " + dataSubId + ", active data sub: " + subIds[0]);
-
-        if (subIds[0] != dataSubId) {
-            Iterator<Integer> iterator = mRequestInfos.keySet().iterator();
-            while (iterator.hasNext()) {
-                RequestInfo requestInfo = mRequestInfos.get(iterator.next());
-                String specifier = requestInfo.request.networkCapabilities.getNetworkSpecifier();
-                if (specifier == null || specifier.equals("")) {
-                    onReleaseRequest(requestInfo);
-                }
-            }
-        }
+        logd("onSettingsChange, activePhoneId = " + activePhoneId);
+        deactivateDdsRequests();
 
         // Some request maybe pending due to invalid settings
         // Try to handle pending request when settings changed
