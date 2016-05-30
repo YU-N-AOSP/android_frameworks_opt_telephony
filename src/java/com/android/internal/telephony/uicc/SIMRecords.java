@@ -498,14 +498,6 @@ public class SIMRecords extends IccRecords {
     /**
      * {@inheritDoc}
      */
-     @Override
-     public boolean isCallForwardStatusStored() {
-         return (mEfCfis != null) || (mEfCff != null);
-     }
-
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public int getVoiceCallForwardingFlag() {
         return mCallForwardingStatus;
