@@ -33,8 +33,6 @@ import android.os.Looper;
 import android.os.Message;
 import android.os.Registrant;
 import android.os.RegistrantList;
-import android.os.RemoteException;
-import android.os.ServiceManager;
 import android.os.SystemProperties;
 import android.os.UserHandle;
 import android.preference.PreferenceManager;
@@ -1543,29 +1541,6 @@ public abstract class PhoneBase extends Handler implements Phone {
             callForwardingIndicator = getCallForwardingIndicatorFromSharedPref();
         }
         return (callForwardingIndicator == IccRecords.CALL_FORWARDING_STATUS_ENABLED);
-    }
-
-    private boolean isCurrentSubValid() {
-        final int PROVISIONED = 1;
-        final int INVALID_STATE = -1;
-        int provisionStatus = PROVISIONED;
-        SubscriptionManager subscriptionManager = SubscriptionManager.from(mContext);
-        IExtTelephony mExtTelephony = IExtTelephony.Stub.
-                asInterface(ServiceManager.getService("extphone"));
-        if (TelephonyManager.getDefault().isMultiSimEnabled()) {
-            try {
-                //get current provision state of the SIM.
-                provisionStatus =
-                        mExtTelephony.getCurrentUiccCardProvisioningStatus(mPhoneId);
-            } catch (RemoteException ex) {
-                provisionStatus = INVALID_STATE;
-            } catch (NullPointerException ex) {
-                provisionStatus = INVALID_STATE;
-            }
-        }
-        Rlog.d(LOG_TAG, "ProvisionStatus: " + provisionStatus);
-        return subscriptionManager.isActiveSubId(getSubId()) &&
-                (provisionStatus == PROVISIONED);
     }
 
     /**
