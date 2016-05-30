@@ -83,7 +83,7 @@ public class EncodedStringValue implements Cloneable {
                 // or unsupported.
                 mData = data.getBytes(CharacterSets.MIMENAME_ISO_8859_1);
                 mCharacterSet = CharacterSets.ISO_8859_1;
-            } catch (UnsupportedEncodingException _) {
+            } catch (UnsupportedEncodingException e) {
                 mData = data.getBytes(); // system default encoding
                 mCharacterSet = CharacterSets.ANY_CHARSET;
             }
