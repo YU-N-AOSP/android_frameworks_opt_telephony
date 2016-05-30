@@ -703,7 +703,6 @@ public class CDMAPhone extends PhoneBase {
         return mCT.mForegroundCall;
     }
 
-    @Override
     public void
     selectNetworkManually(OperatorInfo network,
             Message response) {
