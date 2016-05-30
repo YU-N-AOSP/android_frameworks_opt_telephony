@@ -277,18 +277,8 @@ public class DcController extends StateMachine {
                                 if (DBG) log("onDataStateChanged: inactive, add to cleanup list");
                                 apnsToCleanup.addAll(dc.mApnContexts.keySet());
                             } else {
-                                for (ApnContext apnContext : dc.mApnContexts) {
-                                    if (apnContext.isEnabled()) {
-                                        if (DBG) {
-                                            log("onDataStateChanged: inactive, add to retry list");
-                                        }
-                                        dcsToRetry.add(dc);
-                                        break;
-                                    } else {
-                                        apnsToCleanup.add(apnContext);
-                                        if (DBG) log("APN is disabled, not retrying.");
-                                    }
-                                }
+                                if (DBG) log("onDataStateChanged: inactive, add to retry list");
+                                dcsToRetry.add(dc);
                             }
                         }
                     } else {

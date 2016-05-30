@@ -22,12 +22,11 @@ import com.android.internal.util.Protocol;
 import com.android.internal.util.State;
 import com.android.internal.util.StateMachine;
 import com.android.internal.telephony.CommandException;
-import com.android.internal.telephony.dataconnection.DcSwitchAsyncChannel.RequestInfo;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneConstants;
 import com.android.internal.telephony.PhoneBase;
 import com.android.internal.telephony.PhoneProxy;
-import com.android.internal.telephony.SubscriptionController;
+import com.android.internal.telephony.dataconnection.DcSwitchAsyncChannel.RequestInfo;
 
 import android.os.AsyncResult;
 import android.os.Message;
@@ -122,24 +121,10 @@ public class DcSwitchStateMachine extends StateMachine {
 
 
                 case DcSwitchAsyncChannel.EVENT_DATA_ATTACHED:
-                    SubscriptionController subController = SubscriptionController.getInstance();
-                    int ddsSubId = subController.getDefaultDataSubId();
-                    int ddsPhoneId = subController.getPhoneId(ddsSubId);
-
                     if (DBG) {
-                        log("IdleState: EVENT_DATA_ATTACHED");
+                        log("AttachingState: EVENT_DATA_ATTACHED");
                     }
-
-                    if (ddsPhoneId == mId) {
-                        if (DBG) {
-                            log("IdleState: DDS sub reported ATTACHed in IDLE state");
-                        }
-                        /* Move to AttachingState and handle this ATTACH msg over there.
-                         * This would ensure that Modem gets a ALLOW_DATA(true)
-                         */
-                        deferMessage(msg);
-                        transitionTo(mAttachingState);
-                    }
+                    transitionTo(mAttachedState);
                     retVal = HANDLED;
                     break;
 
@@ -322,7 +307,9 @@ public class DcSwitchStateMachine extends StateMachine {
                         DctController.getInstance().releaseAllRequests(mId);
                     }
 
-                    transitionTo(mIdleState);
+                    // modem gets unhappy if we try to detach while attaching
+                    // wait til attach finishes.
+                    deferMessage(msg);
                     retVal = HANDLED;
                     break;
                 }
