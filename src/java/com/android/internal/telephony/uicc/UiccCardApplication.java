@@ -147,7 +147,7 @@ public class UiccCardApplication {
             }
 
             if (mPersoSubState != oldPersoSubState &&
-                    isPersoLocked()) {
+                    mPersoSubState == PersoSubState.PERSOSUBSTATE_SIM_NETWORK) {
                 notifyNetworkLockedRegistrantsIfNeeded(null);
             }
 
@@ -541,14 +541,13 @@ public class UiccCardApplication {
         }
 
         if (mAppState == AppState.APPSTATE_SUBSCRIPTION_PERSO &&
-                isPersoLocked()) {
-            AsyncResult ar = new AsyncResult(null, mPersoSubState.ordinal(), null);
+                mPersoSubState == PersoSubState.PERSOSUBSTATE_SIM_NETWORK) {
             if (r == null) {
                 if (DBG) log("Notifying registrants: NETWORK_LOCKED");
-                mNetworkLockedRegistrants.notifyRegistrants(ar);
+                mNetworkLockedRegistrants.notifyRegistrants();
             } else {
                 if (DBG) log("Notifying 1 registrant: NETWORK_LOCED");
-                r.notifyRegistrant(ar);
+                r.notifyRegistrant(new AsyncResult(null, null, null));
             }
         }
     }
@@ -635,17 +634,6 @@ public class UiccCardApplication {
         }
     }
 
-    public boolean isPersoLocked() {
-        switch (mPersoSubState) {
-            case PERSOSUBSTATE_UNKNOWN:
-            case PERSOSUBSTATE_IN_PROGRESS:
-            case PERSOSUBSTATE_READY:
-                return false;
-            default:
-                return true;
-        }
-    }
-
     /**
      * Supply the ICC PIN to the ICC
      *
@@ -715,10 +703,10 @@ public class UiccCardApplication {
         }
     }
 
-    public void supplyNetworkDepersonalization (String pin, String type, Message onComplete) {
+    public void supplyNetworkDepersonalization (String pin, Message onComplete) {
         synchronized (mLock) {
-            if (DBG) log("Network Despersonalization: pin = **** , type = " + type);
-            mCi.supplyNetworkDepersonalization(pin, type, onComplete);
+            if (DBG) log("supplyNetworkDepersonalization");
+            mCi.supplyNetworkDepersonalization(pin, onComplete);
         }
     }
 
